@@ -16,6 +16,11 @@ struct subasta {
   int habilitado;
 };
 
+double *iniciarPool(int n);
+int posicionMenor(double *array, int n);
+double sumarSubastas(double *data, int size);
+void mostrarPool(double *pool,int size);
+
 
 Subasta nuevaSubasta(int n){
 	Subasta subastas = (Subasta)nMalloc(sizeof(*subastas));
