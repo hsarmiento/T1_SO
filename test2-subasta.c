@@ -46,35 +46,9 @@ int oferente(Subasta s, int print_msg, char *nom, int oferta) {
   return ret;
 }
 
-int test1(int print_msg) {
-  Subasta s= nuevaSubasta(3);
-  nTask claudits= nEmitTask(aleatorio, s, print_msg, "claudits", 300);
-  nTask marta= nEmitTask(aleatorio, s, print_msg, "marta", 900);
-  nTask perrini= nEmitTask(aleatorio, s, print_msg, "perrini", 1200);
-  nTask alanezz= nEmitTask(aleatorio, s, print_msg, "alanezz", 600);
-  if (nWaitTask(claudits))
-    nFatalError("test1", "claudits debio perder con 300\n");
-  
-  int u;
-  int recaud= adjudicar(s, &u);
-  if (recaud!=2700)
-    nFatalError("test1", "La recaudacion debio ser 2700 y no %d\n", recaud);
-  if (u!=0)
-    nFatalError("test1", "Quedaron %d unidades sin vender\n", u);
-  if (!nWaitTask(marta))
-    nFatalError("nMain", "marta debio ganar con 900\n");
-  if (!nWaitTask(perrini))
-    nFatalError("nMain", "perrini debio ganar con 1200\n");
-  if (!nWaitTask(alanezz))
-    nFatalError("nMain", "alanezz debio ganar con 600\n");
-  
-  if (print_msg>0)
-    nPrintf("El monto recaudado es %d y quedaron %d unidades sin vender\n",
-            recaud, u);
-  return 0;
-}
 
-int test2(int print_msg) {
+
+int test1(int print_msg) {
   Subasta s= nuevaSubasta(4);
   nTask pimienta= nEmitTask(oferente, s, print_msg, "pimienta", 10);
   if (print_msg>=0)
@@ -115,47 +89,70 @@ int test2(int print_msg) {
   return 0;
 }
 
-int test3(int print_msg) {
-  Subasta s= nuevaSubasta(5);
-  nTask tomas= nEmitTask(oferente, s, print_msg, "tomas", 2, -1);
-  if (print_msg>=0)
-    nSleep(1000);
-  nTask monica= nEmitTask(oferente, s, print_msg, "monica", 3, -1);
-  if (print_msg>=0)
-    nSleep(1000);
+//random delay and size pool equal to 1
+int test2(int print_msg) {
+  Subasta s= nuevaSubasta(1);
+  nTask claudits= nEmitTask(aleatorio, s, print_msg, "claudits", 300);
+  nTask marta= nEmitTask(aleatorio, s, print_msg, "marta", 900);
+  nTask perrini= nEmitTask(aleatorio, s, print_msg, "perrini", 1200);
+  nTask alanezz= nEmitTask(aleatorio, s, print_msg, "alanezz", 600);
+  if (nWaitTask(claudits))
+    nFatalError("test1", "claudits debio perder con 300\n");
+  if (nWaitTask(marta))
+    nFatalError("test1", "marta debio perder con 900\n");
+  if (nWaitTask(alanezz))
+    nFatalError("test1", "alanezz debio perder con 300\n");
+  
   int u;
   int recaud= adjudicar(s, &u);
-  if (recaud!=5)
-    nFatalError("test3", "La recaudacion debio ser 5 y no %d\n", recaud);
-  if (u!=3)
+  if (recaud!=1200)
+    nFatalError("test1", "La recaudacion debio ser 1200 y no %d\n", recaud);
+  if (!nWaitTask(perrini))
+    nFatalError("nMain", "perrini debio ganar con 1200\n");
+  if (print_msg>0)
+    nPrintf("El monto recaudado es %d y quedaron %d unidades sin vender\n",
+            recaud, u);
+  return 0;
+}
+
+// just one offering and several empty slots
+int test3(int print_msg) {
+  Subasta s= nuevaSubasta(10);
+  nTask tomas= nEmitTask(oferente, s, print_msg, "tomas", 10, -1);
+  if (print_msg>=0)
+    nSleep(3000);
+  int u;
+  int recaud= adjudicar(s, &u);
+  if (recaud!=10)
+    nFatalError("test3", "La recaudacion debio ser 10 y no %d\n", recaud);
+  if (u!=9)
     nFatalError("test3", "Quedaron %d unidades sin vender\n", u);
   if (print_msg>0)
     nPrintf("El monto recaudado es %d y quedaron %d unidades sin vender\n",
             recaud, u);
   if (!nWaitTask(tomas))
-    nFatalError("nMain", "tomas debio perder con 2\n");
-  if (!nWaitTask(monica))
-    nFatalError("nMain", "monica debio perder con 3\n");
+    nFatalError("nMain", "tomas debio ganar con 10\n");
   return 0;
 }
 
-#define N 200
-#define M 60000
-
+#define N 500
+#define M 100000
 
 int nMain() {
   mutex= nMakeSem(1);
-  nPrintf("una sola subasta con tiempos aleatorios\n");
-  test1(1);
-  nPrintf("test aprobado\n");
-  nPrintf("-------------\n");
-
   nPrintf("una sola subasta con tiempos deterministicos\n");
   test2(1);
   nPrintf("test aprobado\n");
   nPrintf("-------------\n");
 
-  nPrintf("una sola subasta con menos oferentes que unidades disponibles\n");
+
+  nPrintf("una sola subasta con tiempos aleatorios y delay\n");
+  test1(1);
+  nPrintf("test aprobado\n");
+  nPrintf("-------------\n");
+
+
+  nPrintf("una sola subasta con 1 oferente y varios slots vacios\n");
   test3(1);
   nPrintf("test aprobado\n");
   nPrintf("-------------\n");
@@ -167,17 +164,18 @@ int nMain() {
   nTask *tasks3= nMalloc(M*sizeof(nTask));
   int k;
   for (k=1; k<N; k++) {
-    tasks1[k]= nEmitTask(test1, 0);
     tasks2[k]= nEmitTask(test2, 0);
+    tasks1[k]= nEmitTask(test1, 0);
     tasks3[k]= nEmitTask(test3, 0);
   }
+  tasks3[0]= nEmitTask(test3, 1);
   tasks1[0]= nEmitTask(test1, 1);
   tasks2[0]= nEmitTask(test2, 1);
-  tasks3[0]= nEmitTask(test3, 1);
+  
   for (k=0; k<N; k++) {
-    nWaitTask(tasks1[k]);
-    nWaitTask(tasks2[k]);
     nWaitTask(tasks3[k]);
+    nWaitTask(tasks1[k]);
+    nWaitTask(tasks2[k]);    
   }
   nPrintf("test aprobado\n");
   nPrintf("-------------\n");

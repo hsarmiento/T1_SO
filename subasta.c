@@ -35,9 +35,9 @@ Subasta nuevaSubasta(int n){
 
 double adjudicar(Subasta s, int *prestantes){
 	double suma;
-	if(s->habilitado == TRUE){
+	if(s->habilitado){
 		nEnter(s->mon);
-		while(s->escribiendo == TRUE){
+		while(s->escribiendo){
 			nWait(s->mon);
 		}
 		s->escribiendo = FALSE;
@@ -93,7 +93,7 @@ int ofrecer(Subasta s, double precio){
 	nNotifyAll(s->mon2);
 	while(i != -1 && precio == s->pool[i]){
 		nWait(s->mon2);
-		if(s->adjudicado == TRUE && precio == s->pool[i]){
+		if(s->adjudicado && precio == s->pool[i]){
 			nExit(s->mon2);
 			nEnter(s->mon3);
 			s->eliminados++;
